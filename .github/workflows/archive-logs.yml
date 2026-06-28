@@ -1,0 +1,38 @@
+name: Archive evo_web_logs
+
+on:
+  schedule:
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+
+jobs:
+  archive:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Archive logs
+        run: |
+          shopt -s nullglob
+          FILES=(evo_web_logs/*.md)
+          if [ ${#FILES[@]} -eq 0 ]; then
+            echo "No logs to archive"
+            exit 0
+          fi
+          DATE=$(date +%Y-%m-%d)
+          echo "Archiving ${#FILES[@]} log files for $DATE"
+          mkdir -p archive/$DATE
+          mv evo_web_logs/*.md archive/$DATE/
+          tar -czf evo_web_logs_$DATE.tar.gz -C archive $DATE
+
+          gh release create "archive-$DATE" evo_web_logs_$DATE.tar.gz \
+            --title "Archive $DATE" \
+            --notes "Auto-archived evo_web_logs for $DATE"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git rm evo_web_logs/*.md
+          git commit -m "archive: clear evo_web_logs for $DATE"
+          git push origin main
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

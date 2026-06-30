@@ -27,14 +27,14 @@ jobs:
           mv evo_web_logs/*.md archive/$DATE/
           tar -czf evo_web_logs_$DATE.tar.gz -C archive $DATE
 
+          gh release create "archive-$DATE" evo_web_logs_$DATE.tar.gz \
+            --title "Archive $DATE" \
+            --notes "Auto-archived evo_web_logs for $DATE"
+
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git rm "${FILES[@]}"
           git commit -m "archive: clear evo_web_logs for $DATE"
           git push origin main
-
-          gh release create "archive-$DATE" evo_web_logs_$DATE.tar.gz \
-            --title "Archive $DATE" \
-            --notes "Auto-archived evo_web_logs for $DATE"
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
